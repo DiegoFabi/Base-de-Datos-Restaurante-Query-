@@ -1,0 +1,214 @@
+Algoritmo Sistema_Estadistico_Linio_DivConq
+	
+	// Declaración de arreglos
+	Dimension datos[1000]
+	Dimension datosOrdenados[1000]
+	Dimension freq[1001]
+	
+	// Declaración de variables
+	Definir n, i, j, k, opcion, limite, valor Como Entero
+	Definir resultado, suma Como Real
+	
+	n = 0
+	
+	Repetir
+		
+		// Menú principal
+		Escribir "====================================="
+		Escribir "  SISTEMA ESTADÍSTICO LINIO"
+		Escribir "  (Divide y Vencerás)"
+		Escribir "====================================="
+		Escribir "1. Ingresar datos manualmente"
+		Escribir "2. Generar datos aleatorios"
+		Escribir "3. Calcular PROMEDIO"
+		Escribir "4. Calcular MEDIANA (Merge Sort)"
+		Escribir "5. Calcular MODA"
+		Escribir "6. Mostrar datos actuales"
+		Escribir "0. Salir"
+		Escribir "====================================="
+		Escribir "Seleccione una opción: "
+		Leer opcion
+		
+		Segun opcion Hacer
+			
+				// Salir
+			Caso 0:
+				Escribir "Saliendo del sistema... ¡Hasta luego!"
+				
+				// Ingresar datos manualmente
+			Caso 1:
+				Escribir "¿Cuántos datos desea ingresar? (máx 1000): "
+				Leer n
+				Si n > 1000 Entonces
+					n = 1000
+				FinSi
+				Para i = 1 Hasta n Hacer
+					Escribir "Valor ", i, ": "
+					Leer valor
+					datos[i] = valor
+				FinPara
+				Escribir "Datos cargados correctamente."
+				
+				// Generar datos aleatorios
+			Caso 2:
+				Escribir "¿Cuántos datos aleatorios desea generar? (máx 1000): "
+				Leer n
+				Si n > 1000 Entonces
+					n = 1000
+				FinSi
+				Escribir "Valor máximo aleatorio: "
+				Leer limite
+				Para i = 1 Hasta n Hacer
+					datos[i] = Aleatorio(1, limite)
+				FinPara
+				Escribir "Datos generados correctamente."
+				
+				// Calcular promedio
+			Caso 3:
+				Si n = 0 Entonces
+					Escribir "No hay datos cargados."
+				Sino
+					suma = 0
+					Para i = 1 Hasta n Hacer
+						suma = suma + datos[i]
+					FinPara
+					resultado = suma / n
+					Escribir "PROMEDIO = ", resultado
+				FinSi
+				
+				// Calcular mediana con Merge Sort (Divide y Conquista)
+			Caso 4:
+				Si n = 0 Entonces
+					Escribir "No hay datos cargados."
+				Sino
+					// Copiar datos a arreglo temporal
+					Para i = 1 Hasta n Hacer
+						datosOrdenados[i] = datos[i]
+					FinPara
+					
+					// MERGE SORT - Divide y Conquista (Bottom-Up)
+					Definir tamanio, izq, med, der Como Entero
+					Definir n1, n2, p1, p2, pt Como Entero
+					Dimension arrIzq[500]
+					Dimension arrDer[500]
+					
+					tamanio = 1
+					
+					Mientras tamanio < n Hacer
+						izq = 1
+						
+						Mientras izq <= n Hacer
+							med = izq + tamanio - 1
+							
+							Si med < n Entonces
+								der = med + tamanio
+								Si der > n Entonces
+									der = n
+								FinSi
+								
+								// Proceso de Merge (Conquista)
+								n1 = med - izq + 1
+								n2 = der - med
+								
+								// Copiar a subarreglos temporales
+								Para i = 1 Hasta n1 Hacer
+									arrIzq[i] = datosOrdenados[izq + i - 1]
+								FinPara
+								
+								Para i = 1 Hasta n2 Hacer
+									arrDer[i] = datosOrdenados[med + i]
+								FinPara
+								
+								// Mezclar los subarreglos ordenados
+								p1 = 1
+								p2 = 1
+								pt = izq
+								
+								Mientras p1 <= n1 Y p2 <= n2 Hacer
+									Si arrIzq[p1] <= arrDer[p2] Entonces
+										datosOrdenados[pt] = arrIzq[p1]
+										p1 = p1 + 1
+									Sino
+										datosOrdenados[pt] = arrDer[p2]
+										p2 = p2 + 1
+									FinSi
+									pt = pt + 1
+								FinMientras
+								
+								// Copiar elementos restantes
+								Mientras p1 <= n1 Hacer
+									datosOrdenados[pt] = arrIzq[p1]
+									p1 = p1 + 1
+									pt = pt + 1
+								FinMientras
+								
+								Mientras p2 <= n2 Hacer
+									datosOrdenados[pt] = arrDer[p2]
+									p2 = p2 + 1
+									pt = pt + 1
+								FinMientras
+							FinSi
+							
+							izq = izq + tamanio * 2
+						FinMientras
+						
+						tamanio = tamanio * 2
+					FinMientras
+					
+					// Calcular mediana del arreglo ordenado
+					Si n MOD 2 = 1 Entonces
+						resultado = datosOrdenados[trunc((n + 1) / 2)]
+					Sino
+						resultado = (datosOrdenados[trunc(n / 2)] + datosOrdenados[trunc(n / 2) + 1]) / 2
+					FinSi
+					Escribir "MEDIANA (Merge Sort - Divide y Conquista) = ", resultado
+				FinSi
+				
+				// Calcular moda
+			Caso 5:
+				Si n = 0 Entonces
+					Escribir "No hay datos cargados."
+				Sino
+					// Inicializar frecuencias
+					Para i = 1 Hasta 1000 Hacer
+						freq[i] = 0
+					FinPara
+					
+					// Contar frecuencias
+					Para i = 1 Hasta n Hacer
+						freq[datos[i]] = freq[datos[i]] + 1
+					FinPara
+					
+					// Encontrar moda
+					Definir maxFreq, moda Como Entero
+					maxFreq = 0
+					moda = 0
+					Para i = 1 Hasta 1000 Hacer
+						Si freq[i] > maxFreq Entonces
+							maxFreq = freq[i]
+							moda = i
+						FinSi
+					FinPara
+					
+					Escribir "MODA = ", moda
+				FinSi
+				
+				// Mostrar datos
+			Caso 6:
+				Si n = 0 Entonces
+					Escribir "No hay datos cargados."
+				Sino
+					Escribir "Datos actuales: "
+					Para i = 1 Hasta n Hacer
+						Escribir datos[i]
+					FinPara
+				FinSi
+				
+			De Otro Modo:
+				Escribir "Opción inválida, intente nuevamente."
+				
+		FinSegun
+		
+	Hasta Que opcion = 0
+	
+FinAlgoritmo
