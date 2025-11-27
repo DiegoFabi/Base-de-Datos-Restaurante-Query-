@@ -1,0 +1,1148 @@
+CREATE DATABASE RANCHO_SAGRADO;
+GO
+
+USE RANCHO_SAGRADO;
+GO
+
+
+-- ============================================
+-- TABLAS DE CLIENTE (3 tablas)
+-- ============================================
+
+-- Tabla CLIENTE_DIRECCION
+CREATE TABLE CLIENTE_DIRECCION (
+  IdDireccion INT IDENTITY PRIMARY KEY,
+  Jiron VARCHAR(30),
+  NumeroCasa INT,
+  Lote INT,
+  Manzana INT
+);
+
+-- Tabla CLIENTE
+CREATE TABLE CLIENTE (
+  IdCliente INT IDENTITY PRIMARY KEY,
+  PrimerNombre VARCHAR(50) NOT NULL,
+  SegundoNombre VARCHAR(50),
+  ApellidoPaterno VARCHAR(50) NOT NULL,
+  ApellidoMaterno VARCHAR(50) NOT NULL,
+  FechaNacimiento DATE,
+  DNI VARCHAR(8) UNIQUE,
+  RUC VARCHAR(11) UNIQUE
+);
+
+-- Tabla CLIENTE_CONTACTO
+CREATE TABLE CLIENTE_CONTACTO (
+  IdContacto INT IDENTITY PRIMARY KEY,
+  IdDireccion INT,
+  IdCliente INT NOT NULL,
+  Telefono VARCHAR(9),
+  Email VARCHAR(100),
+  FOREIGN KEY (IdDireccion) REFERENCES CLIENTE_DIRECCION(IdDireccion),
+  FOREIGN KEY (IdCliente) REFERENCES CLIENTE(IdCliente)
+);
+
+
+-- ============================================
+-- TABLAS DE EMPLEADO (5 tablas)
+-- ============================================
+
+-- Tabla DIRECCION (para empleados)
+CREATE TABLE DIRECCION (
+  IdDireccion INT IDENTITY PRIMARY KEY,
+  Jiron VARCHAR(100),
+  Manzana INT,
+  NumeroCasa INT
+);
+
+-- Tabla CARGO
+CREATE TABLE CARGO (
+  IdCargo INT IDENTITY PRIMARY KEY,
+  NombreCargo VARCHAR(50) NOT NULL UNIQUE,
+  Salario VARCHAR(100)
+);
+
+-- Tabla EMPLEADO_CONTACTO
+CREATE TABLE EMPLEADO_CONTACTO (
+  IdEmpleadoContacto INT IDENTITY PRIMARY KEY,
+  Telefono VARCHAR(9),
+  Email VARCHAR(100)
+);
+
+-- Tabla EMPLEADO
+CREATE TABLE EMPLEADO (
+  IdEmpleado INT IDENTITY PRIMARY KEY,
+  PrimerNombre VARCHAR(50) NOT NULL,
+  SegundoNombre VARCHAR(50),
+  ApellidoPaterno VARCHAR(50) NOT NULL,
+  ApellidoMaterno VARCHAR(50) NOT NULL,
+  Estado VARCHAR(15) DEFAULT 'Activo' CHECK(Estado IN ('Activo', 'Inactivo', 'Suspendido')),
+  DNI VARCHAR(8) NOT NULL UNIQUE,
+  IdDireccion INT,
+  IdCargo INT NOT NULL,
+  IdEmpleadoContacto INT,
+  FOREIGN KEY (IdDireccion) REFERENCES DIRECCION(IdDireccion),
+  FOREIGN KEY (IdCargo) REFERENCES CARGO(IdCargo),
+  FOREIGN KEY (IdEmpleadoContacto) REFERENCES EMPLEADO_CONTACTO(IdEmpleadoContacto)
+);
+
+-- Tabla HISTORIAL_EMPLEADO
+CREATE TABLE HISTORIAL_EMPLEADO (
+  IdHistorial INT IDENTITY PRIMARY KEY,
+  IdCargo INT NOT NULL,
+  IdEmpleado INT NOT NULL,
+  FechaIngreso DATE DEFAULT GETDATE(),
+  FOREIGN KEY (IdCargo) REFERENCES CARGO(IdCargo),
+  FOREIGN KEY (IdEmpleado) REFERENCES EMPLEADO(IdEmpleado)
+);
+
+
+-- ============================================
+-- TABLAS DE CARTA Y PLATOS (4 tablas)
+-- ============================================
+
+-- Tabla CARTA
+CREATE TABLE CARTA (
+  IdCarta INT IDENTITY PRIMARY KEY,
+  NombreCarta VARCHAR(100) NOT NULL,
+  CantidadPlatos INT DEFAULT 0,
+  Descripcion VARCHAR(100),
+  Precio DECIMAL(8,2)
+);
+
+-- Tabla CATEGORIA
+CREATE TABLE CATEGORIA (
+  IdCategoria INT IDENTITY PRIMARY KEY,
+  NombreCategoria VARCHAR(50) NOT NULL,
+  Descripcion VARCHAR(100),
+  IdCarta INT NOT NULL,
+  FOREIGN KEY (IdCarta) REFERENCES CARTA(IdCarta)
+);
+
+-- Tabla PLATO_DETALLE
+CREATE TABLE PLATO_DETALLE (
+  IdPlatoDetalle INT IDENTITY PRIMARY KEY,
+  Precio DECIMAL(5,2) NOT NULL CHECK(Precio > 0),
+  Disponibilidad VARCHAR(20) DEFAULT 'Disponible' CHECK(Disponibilidad IN ('Disponible', 'Agotado', 'Suspendido'))
+);
+
+-- Tabla PLATO
+CREATE TABLE PLATO (
+  IdPlato INT IDENTITY PRIMARY KEY,
+  NombrePlato VARCHAR(100) NOT NULL,
+  Descripcion VARCHAR(255),
+  TiempoPreparacion INT CHECK(TiempoPreparacion > 0),
+  Precio DECIMAL(5,2) NOT NULL CHECK(Precio > 0),
+  Disponibilidad VARCHAR(20) DEFAULT 'Disponible' CHECK(Disponibilidad IN ('Disponible', 'Agotado', 'Suspendido')),
+  IdCategoria INT NOT NULL,
+  IdPlatoDetalle INT,
+  FOREIGN KEY (IdCategoria) REFERENCES CATEGORIA(IdCategoria),
+  FOREIGN KEY (IdPlatoDetalle) REFERENCES PLATO_DETALLE(IdPlatoDetalle)
+);
+
+
+-- ============================================
+-- TABLAS DE PROVEEDOR (5 tablas)
+-- ============================================
+
+-- Tabla UBICACION (para proveedores)
+CREATE TABLE UBICACION (
+  IdUbicacion INT IDENTITY PRIMARY KEY,
+  Distrito VARCHAR(50),
+  Provincia VARCHAR(50),
+  Region VARCHAR(50)
+);
+
+-- Tabla DIRECCION_PROVEEDOR
+CREATE TABLE DIRECCION_PROVEEDOR (
+  IdDireccion INT IDENTITY PRIMARY KEY,
+  Jiron VARCHAR(50),
+  Manzana VARCHAR(50),
+  Lote VARCHAR(50),
+  IdUbicacion INT,
+  FOREIGN KEY (IdUbicacion) REFERENCES UBICACION(IdUbicacion)
+);
+
+-- Tabla TIPO_SUMINISTRO
+CREATE TABLE TIPO_SUMINISTRO (
+  IdTipoSuministro INT IDENTITY PRIMARY KEY,
+  Descripcion VARCHAR(200) NOT NULL
+);
+
+-- Tabla PROVEEDOR_CONTACTO
+CREATE TABLE PROVEEDOR_CONTACTO (
+  IdContacto INT IDENTITY PRIMARY KEY,
+  Telefono VARCHAR(9),
+  EmailContacto VARCHAR(50)
+);
+
+-- Tabla PROVEEDOR
+CREATE TABLE PROVEEDOR (
+  IdProveedor INT IDENTITY PRIMARY KEY,
+  NombreEmpresa VARCHAR(50) NOT NULL,
+  RUC VARCHAR(11) NOT NULL UNIQUE,
+  Estado VARCHAR(50) DEFAULT 'Activo' CHECK(Estado IN ('Activo', 'Inactivo')),
+  IdDireccion INT,
+  IdTipoSuministro INT NOT NULL,
+  IdContacto INT,
+  FOREIGN KEY (IdDireccion) REFERENCES DIRECCION_PROVEEDOR(IdDireccion),
+  FOREIGN KEY (IdTipoSuministro) REFERENCES TIPO_SUMINISTRO(IdTipoSuministro),
+  FOREIGN KEY (IdContacto) REFERENCES PROVEEDOR_CONTACTO(IdContacto)
+);
+
+
+-- ============================================
+-- TABLAS DE MESA (2 tablas)
+-- ============================================
+
+-- Tabla UBICACION_MESA
+CREATE TABLE UBICACION_MESA (
+  IdUbicacion INT IDENTITY PRIMARY KEY,
+  NombreUbicacion VARCHAR(50) NOT NULL
+);
+
+-- Tabla MESA
+CREATE TABLE MESA (
+  IdMesa INT IDENTITY PRIMARY KEY,
+  Capacidad INT NOT NULL CHECK(Capacidad > 0),
+  NumeroMesa INT NOT NULL UNIQUE,
+  Estado VARCHAR(20) DEFAULT 'Disponible' CHECK(Estado IN ('Disponible', 'Ocupada', 'Reservada')),
+  IdUbicacion INT,
+  FOREIGN KEY (IdUbicacion) REFERENCES UBICACION_MESA(IdUbicacion)
+);
+
+
+-- ============================================
+-- TABLA DE RESERVACION (1 tabla)
+-- ============================================
+
+-- Tabla RESERVACION
+CREATE TABLE RESERVACION (
+  IdReservacion INT IDENTITY PRIMARY KEY,
+  Fecha DATETIME NOT NULL,
+  Hora TIME NOT NULL,
+  NumeroPersonas INT NOT NULL CHECK(NumeroPersonas > 0),
+  OcasionEspecial VARCHAR(100),
+  EstadoReservacion VARCHAR(20) DEFAULT 'Pendiente' CHECK(EstadoReservacion IN ('Pendiente', 'Confirmada', 'Cancelada', 'Completada')),
+  IdCliente INT NOT NULL,
+  IdMesa INT NOT NULL,
+  FOREIGN KEY (IdCliente) REFERENCES CLIENTE(IdCliente),
+  FOREIGN KEY (IdMesa) REFERENCES MESA(IdMesa)
+);
+
+
+-- ============================================
+-- TABLAS DE PEDIDO (2 tablas)
+-- ============================================
+
+-- Tabla PEDIDO
+CREATE TABLE PEDIDO (
+  IdPedido INT IDENTITY PRIMARY KEY,
+  FechaPedido DATE DEFAULT GETDATE(),
+  HoraPedido TIME DEFAULT CONVERT(TIME, GETDATE()),
+  EstadoPedido VARCHAR(20) DEFAULT 'Pendiente' CHECK(EstadoPedido IN ('Pendiente', 'En Preparacion', 'Servido', 'Pagado', 'Cancelado')),
+  IdCliente INT NOT NULL,
+  IdMesa INT NOT NULL,
+  IdEmpleado INT NOT NULL,
+  FOREIGN KEY (IdCliente) REFERENCES CLIENTE(IdCliente),
+  FOREIGN KEY (IdMesa) REFERENCES MESA(IdMesa),
+  FOREIGN KEY (IdEmpleado) REFERENCES EMPLEADO(IdEmpleado)
+);
+
+-- Tabla DETALLE_PEDIDO
+CREATE TABLE DETALLE_PEDIDO (
+  IdDetallePedido INT IDENTITY PRIMARY KEY,
+  Cantidad INT NOT NULL CHECK(Cantidad > 0),
+  PrecioUnitario DECIMAL(8,2) NOT NULL CHECK(PrecioUnitario > 0),
+  Observaciones VARCHAR(200),
+  IdPedido INT NOT NULL,
+  IdPlato INT NOT NULL,
+  FOREIGN KEY (IdPedido) REFERENCES PEDIDO(IdPedido),
+  FOREIGN KEY (IdPlato) REFERENCES PLATO(IdPlato)
+);
+
+
+-- ============================================
+-- TABLAS DE COMPROBANTE Y PAGO (4 tablas)
+-- ============================================
+
+-- Tabla COMPROBANTE_PAGO
+CREATE TABLE COMPROBANTE_PAGO (
+  IdComprobante INT IDENTITY PRIMARY KEY,
+  IdPedido INT NOT NULL UNIQUE,
+  TipoComprobante VARCHAR(30) NOT NULL CHECK(TipoComprobante IN ('Boleta', 'Factura')),
+  Serie VARCHAR(10) NOT NULL,
+  FechaEmision DATETIME DEFAULT GETDATE(),
+  SubTotal DECIMAL(10,2) NOT NULL CHECK(SubTotal >= 0),
+  IGV DECIMAL(10,2) DEFAULT 0 CHECK(IGV >= 0),
+  MontoTotal DECIMAL(10,2) NOT NULL CHECK(MontoTotal > 0),
+  EstadoComprobante VARCHAR(30) DEFAULT 'Emitido' CHECK(EstadoComprobante IN ('Emitido', 'Anulado')),
+  FOREIGN KEY (IdPedido) REFERENCES PEDIDO(IdPedido)
+);
+
+-- Tabla DETALLE_FACTURACION_CLIENTE
+CREATE TABLE DETALLE_FACTURACION_CLIENTE (
+  IdCliente INT PRIMARY KEY,
+  RazonSocial VARCHAR(200),
+  RUC VARCHAR(11),
+  DireccionFiscal VARCHAR(200),
+  FOREIGN KEY (IdCliente) REFERENCES CLIENTE(IdCliente)
+);
+
+-- Tabla PAGO
+CREATE TABLE PAGO (
+  IdPago INT IDENTITY PRIMARY KEY,
+  FechaHoraPago DATETIME DEFAULT GETDATE(),
+  Monto DECIMAL(10,2) NOT NULL CHECK(Monto > 0),
+  MetodoPago VARCHAR(50) NOT NULL CHECK(MetodoPago IN ('Efectivo', 'Tarjeta Debito', 'Tarjeta Credito', 'Yape', 'Plin', 'Transferencia')),
+  IdPedido INT NOT NULL,
+  FOREIGN KEY (IdPedido) REFERENCES PEDIDO(IdPedido)
+);
+
+-- Tabla PAGO_TARJETA
+CREATE TABLE PAGO_TARJETA (
+  IdPagoTarjeta INT IDENTITY PRIMARY KEY,
+  IdPago INT NOT NULL UNIQUE,
+  TipoTarjeta VARCHAR(30),
+  NumeroTarjeta VARCHAR(4),
+  FOREIGN KEY (IdPago) REFERENCES PAGO(IdPago)
+);
+
+
+-- ============================================
+-- TABLAS DE INGREDIENTE E INVENTARIO (2 tablas)
+-- ============================================
+
+-- Tabla INGREDIENTE
+CREATE TABLE INGREDIENTE (
+  IdIngrediente INT IDENTITY PRIMARY KEY,
+  NombreIngrediente VARCHAR(100) NOT NULL,
+  UnidadMedida VARCHAR(20) NOT NULL,
+  Descripcion VARCHAR(100),
+  CostoUnitario DECIMAL(10,2) CHECK(CostoUnitario >= 0),
+  CategoriaIngrediente VARCHAR(50)
+);
+
+-- Tabla INVENTARIO
+CREATE TABLE INVENTARIO (
+  IdInventario INT IDENTITY PRIMARY KEY,
+  CantidadStock INT NOT NULL CHECK(CantidadStock >= 0),
+  FechaUltimaReposicion DATE DEFAULT GETDATE(),
+  StockMinimo INT NOT NULL CHECK(StockMinimo >= 0),
+  FechaVencimiento DATE,
+  IdIngrediente INT NOT NULL,
+  FOREIGN KEY (IdIngrediente) REFERENCES INGREDIENTE(IdIngrediente)
+);
+
+
+-- ============================================
+-- TABLA DE TURNO (1 tabla)
+-- ============================================
+
+-- Tabla TURNO
+CREATE TABLE TURNO (
+  IdTurno INT IDENTITY PRIMARY KEY,
+  NombreTurno VARCHAR(100) NOT NULL,
+  HoraInicio TIME NOT NULL,
+  HoraFin TIME NOT NULL,
+  DiaSemana VARCHAR(15) NOT NULL
+);
+
+
+-- ============================================
+-- TABLAS DE CONTRATO (2 tablas)
+-- ============================================
+
+-- Tabla CONTRATO
+CREATE TABLE CONTRATO (
+  IdContrato INT IDENTITY PRIMARY KEY,
+  FechaInicio DATE NOT NULL,
+  FechaFin DATE,
+  TipoContrato VARCHAR(50) NOT NULL CHECK(TipoContrato IN ('Indefinido', 'Temporal', 'Servicios')),
+  Salario DECIMAL(10,2) CHECK(Salario > 0),
+  EstadoContrato VARCHAR(50) DEFAULT 'Vigente' CHECK(EstadoContrato IN ('Vigente', 'Finalizado', 'Suspendido')),
+  IdEmpleado INT,
+  IdProveedor INT,
+  FOREIGN KEY (IdEmpleado) REFERENCES EMPLEADO(IdEmpleado),
+  FOREIGN KEY (IdProveedor) REFERENCES PROVEEDOR(IdProveedor),
+  CHECK ((IdEmpleado IS NOT NULL AND IdProveedor IS NULL) OR (IdEmpleado IS NULL AND IdProveedor IS NOT NULL))
+);
+
+-- Tabla CONTRATO_CLAUSULA
+CREATE TABLE CONTRATO_CLAUSULA (
+  IdContratoClausula INT IDENTITY PRIMARY KEY,
+  IdContrato INT NOT NULL,
+  DescripcionClausula VARCHAR(500),
+  FOREIGN KEY (IdContrato) REFERENCES CONTRATO(IdContrato)
+);
+
+
+-- ============================================
+-- TABLAS INTERMEDIAS (RELACIONES N:M) - 3 tablas
+-- ============================================
+
+-- Tabla EMPLEADO_TURNO
+CREATE TABLE EMPLEADO_TURNO (
+  IdEmpleadoTurno INT IDENTITY PRIMARY KEY,
+  IdEmpleado INT NOT NULL,
+  IdTurno INT NOT NULL,
+  FechaAsignacion DATE DEFAULT GETDATE(),
+  FOREIGN KEY (IdEmpleado) REFERENCES EMPLEADO(IdEmpleado),
+  FOREIGN KEY (IdTurno) REFERENCES TURNO(IdTurno),
+  UNIQUE(IdEmpleado, IdTurno)
+);
+
+-- Tabla PLATO_INGREDIENTE
+CREATE TABLE PLATO_INGREDIENTE (
+  IdPlatoIngrediente INT IDENTITY PRIMARY KEY,
+  IdPlato INT NOT NULL,
+  IdIngrediente INT NOT NULL,
+  CantidadNecesaria DECIMAL(10,2) NOT NULL CHECK(CantidadNecesaria > 0),
+  FOREIGN KEY (IdPlato) REFERENCES PLATO(IdPlato),
+  FOREIGN KEY (IdIngrediente) REFERENCES INGREDIENTE(IdIngrediente),
+  UNIQUE(IdPlato, IdIngrediente)
+);
+
+-- Tabla PROVEEDOR_INGREDIENTE
+CREATE TABLE PROVEEDOR_INGREDIENTE (
+  IdProveedorIngrediente INT IDENTITY PRIMARY KEY,
+  IdProveedor INT NOT NULL,
+  IdIngrediente INT NOT NULL,
+  PrecioCompra DECIMAL(10,2) CHECK(PrecioCompra > 0),
+  FechaUltimaCompra DATE,
+  FOREIGN KEY (IdProveedor) REFERENCES PROVEEDOR(IdProveedor),
+  FOREIGN KEY (IdIngrediente) REFERENCES INGREDIENTE(IdIngrediente),
+  UNIQUE(IdProveedor, IdIngrediente)
+);
+
+GO
+
+SELECT * FROM DETALLE_PEDIDO
+SELECT * FROM PEDIDO
+SELECT * FROM PLATO
+
+USE RANCHO_SAGRADO;
+GO
+
+
+
+-- CLIENTE_DIRECCION (10 registros)
+INSERT INTO CLIENTE_DIRECCION (Jiron, NumeroCasa, Lote, Manzana) VALUES
+('Jiron Lima', 123, 5, 2),
+('Jiron Arequipa', 456, 8, 3),
+('Jiron Cusco', 789, 12, 1),
+('Jiron Piura', 234, 15, 4),
+('Jiron Tacna', 567, 20, 5),
+('Jiron Trujillo', 890, 25, 6),
+('Jiron Chiclayo', 345, 30, 7),
+('Jiron Iquitos', 678, 35, 8),
+('Jiron Puno', 901, 40, 9),
+('Jiron Huancayo', 112, 45, 10);
+GO
+
+-- DIRECCION (empleados) (10 registros)
+INSERT INTO DIRECCION (Jiron, Manzana, NumeroCasa) VALUES
+('Avenida Larco', 10, 452),
+('Calle San Martin', 15, 789),
+('Prolongacion Cuzco', 20, 234),
+('Jiron Union', 25, 567),
+('Avenida Tacna', 30, 890),
+('Calle Real', 35, 345),
+('Jiron Francisco Bolognesi', 40, 678),
+('Avenida Grau', 45, 901),
+('Calle Los Alisos', 50, 112),
+('Jiron 28 de Julio', 55, 334);
+GO
+
+-- UBICACION (proveedores) (10 registros)
+INSERT INTO UBICACION (Distrito, Provincia, Region) VALUES
+('Miraflores', 'Lima', 'Lima'),
+('San Isidro', 'Lima', 'Lima'),
+('Surco', 'Lima', 'Lima'),
+('Barranco', 'Lima', 'Lima'),
+('La Molina', 'Lima', 'Lima'),
+('San Borja', 'Lima', 'Lima'),
+('Jesus Maria', 'Lima', 'Lima'),
+('Lince', 'Lima', 'Lima'),
+('Pueblo Libre', 'Lima', 'Lima'),
+('Magdalena del Mar', 'Lima', 'Lima');
+GO
+
+-- UBICACION_MESA (10 registros)
+INSERT INTO UBICACION_MESA (NombreUbicacion) VALUES
+('Sala Principal'),
+('Terraza Exterior'),
+('Barra Central'),
+('Zona VIP'),
+('Comedor Familiar'),
+('Jardin Interior'),
+('Balcon Vista Calle'),
+('Area Privada'),
+('Salon de Eventos'),
+('Lounge');
+GO
+
+-- CARGO (10 registros)
+INSERT INTO CARGO (NombreCargo, Salario) VALUES
+('Gerente General', '5000.00'),
+('Chef Ejecutivo', '4000.00'),
+('Chef de Cocina', '3000.00'),
+('Mesero Senior', '1500.00'),
+('Mesero Junior', '1200.00'),
+('Cajero', '1300.00'),
+('Bartender', '1400.00'),
+('Ayudante de Cocina', '1000.00'),
+('Lavaplatos', '900.00'),
+('Recepcionista', '1100.00');
+GO
+
+-- EMPLEADO_CONTACTO (10 registros)
+INSERT INTO EMPLEADO_CONTACTO (Telefono, Email) VALUES
+('987654321', 'gerente@ranchosagrado.com'),
+('987654322', 'chef@ranchosagrado.com'),
+('987654323', 'cocina@ranchosagrado.com'),
+('987654324', 'mesero1@ranchosagrado.com'),
+('987654325', 'mesero2@ranchosagrado.com'),
+('987654326', 'cajero@ranchosagrado.com'),
+('987654327', 'bartender@ranchosagrado.com'),
+('987654328', 'ayudante@ranchosagrado.com'),
+('987654329', 'lavaplatos@ranchosagrado.com'),
+('987654330', 'recepcion@ranchosagrado.com');
+GO
+
+-- TIPO_SUMINISTRO (10 registros)
+INSERT INTO TIPO_SUMINISTRO (Descripcion) VALUES
+('Carnes Rojas Frescas'),
+('Pescados y Mariscos'),
+('Verduras y Hortalizas'),
+('Frutas Tropicales'),
+('Lacteos y Quesos'),
+('Bebidas Alcoholicas'),
+('Bebidas No Alcoholicas'),
+('Especias y Condimentos'),
+('Panaderia y Pasteleria'),
+('Limpieza e Higiene');
+GO
+
+-- PROVEEDOR_CONTACTO (10 registros)
+INSERT INTO PROVEEDOR_CONTACTO (Telefono, EmailContacto) VALUES
+('912345678', 'contacto@carnespremium.pe'),
+('912345679', 'ventas@mariscosdelperu.pe'),
+('912345680', 'pedidos@verdurasfrescas.pe'),
+('912345681', 'frutas@tropicales.pe'),
+('912345682', 'lacteos@productos.pe'),
+('912345683', 'distribucion@bebidas.pe'),
+('912345684', 'contacto@especias.pe'),
+('912345685', 'panaderia@delicias.pe'),
+('912345686', 'suministros@limpieza.pe'),
+('912345687', 'info@organicos.pe');
+GO
+
+-- CLIENTE (10 registros)
+INSERT INTO CLIENTE (PrimerNombre, SegundoNombre, ApellidoPaterno, ApellidoMaterno, FechaNacimiento, DNI, RUC) VALUES
+('Juan', 'Carlos', 'Garcia', 'Lopez', '1985-05-15', '12345678', '10123456789'),
+('Maria', 'Elena', 'Rodriguez', 'Gomez', '1990-08-22', '87654321', '10876543210'),
+('Pedro', 'Andres', 'Martinez', 'Silva', '1988-11-30', '23456789', '20234567890'),
+('Ana', 'Patricia', 'Torres', 'Vargas', '1992-03-18', '34567890', '20345678901'),
+('Luis', 'Alberto', 'Ramirez', 'Castro', '1983-07-25', '45678901', '10456789012'),
+('Carolina', 'Beatriz', 'Flores', 'Mendoza', '1995-01-10', '56789012', '20567890123'),
+('Miguel', 'Angel', 'Herrera', 'Cruz', '1987-09-05', '67890123', '20678901234'),
+('Sofia', 'Isabel', 'Jimenez', 'Reyes', '1993-12-28', '78901234', '10789012345'),
+('Ricardo', 'Enrique', 'Diaz', 'Morales', '1980-04-12', '89012345', '10890123456'),
+('Elena', 'Victoria', 'Rojas', 'Fuentes', '1991-06-20', '90123456', '20901234567');
+GO
+
+-- CARTA (10 registros)
+INSERT INTO CARTA (NombreCarta, CantidadPlatos, Descripcion, Precio) VALUES
+('Carta Tradicional Peruana', 0, 'Platos típicos del Perú', NULL),
+('Carta de Mariscos', 0, 'Especialidades del mar', NULL),
+('Carta Vegetariana', 0, 'Opciones sin carne', NULL),
+('Carta de Bebidas', 0, 'Bebidas y cocktails', NULL),
+('Carta de Postres', 0, 'Dulces y postres', NULL),
+('Carta Executiva', 0, 'Menu del dia', NULL),
+('Carta Infantil', 0, 'Para ninos', NULL),
+('Carta de Fondos', 0, 'Platos principales', NULL),
+('Carta de Entradas', 0, 'Entradas y entremeses', NULL),
+('Carta de Desayunos', 0, 'Desayunos y brunch', NULL);
+GO
+
+-- TURNO (10 registros)
+INSERT INTO TURNO (NombreTurno, HoraInicio, HoraFin, DiaSemana) VALUES
+('Turno Mañana Lunes', '08:00:00', '16:00:00', 'Lunes'),
+('Turno Tarde Lunes', '16:00:00', '23:00:00', 'Lunes'),
+('Turno Mañana Martes', '08:00:00', '16:00:00', 'Martes'),
+('Turno Tarde Martes', '16:00:00', '23:00:00', 'Martes'),
+('Turno Mañana Miercoles', '08:00:00', '16:00:00', 'Miercoles'),
+('Turno Tarde Miercoles', '16:00:00', '23:00:00', 'Miercoles'),
+('Turno Mañana Jueves', '08:00:00', '16:00:00', 'Jueves'),
+('Turno Tarde Jueves', '16:00:00', '23:00:00', 'Jueves'),
+('Turno Mañana Viernes', '08:00:00', '16:00:00', 'Viernes'),
+('Turno Tarde Viernes', '16:00:00', '23:00:00', 'Viernes');
+GO
+
+-- INGREDIENTE (10 registros)
+INSERT INTO INGREDIENTE (NombreIngrediente, UnidadMedida, Descripcion, CostoUnitario, CategoriaIngrediente) VALUES
+('Lomo de Res', 'kg', 'Carne de res premium', 25.50, 'Carnes'),
+('Pechuga de Pollo', 'kg', 'Pollo fresco', 12.00, 'Carnes'),
+('Camarones Frescos', 'kg', 'Mariscos del dia', 35.00, 'Mariscos'),
+('Papa Amarilla', 'kg', 'Papa peruana', 3.50, 'Vegetales'),
+('Cebolla Roja', 'kg', 'Cebolla fresca', 2.80, 'Vegetales'),
+('Aji Amarillo', 'kg', 'Aji peruano', 8.50, 'Condimentos'),
+('Arroz Graneado', 'kg', 'Arroz de calidad', 4.20, 'Granos'),
+('Frijoles Canarios', 'kg', 'Frijoles peruanos', 6.00, 'Granos'),
+('Leche Evaporada', 'lata', 'Leche Gloria', 3.00, 'Lacteos'),
+('Queso Fresco', 'kg', 'Queso de chan', 15.00, 'Lacteos');
+GO
+
+-- ============================================
+-- TABLAS INTERMEDIAS (CON CLAVES FORANEAS)
+-- ============================================
+
+-- CLIENTE_CONTACTO (10 registros)
+INSERT INTO CLIENTE_CONTACTO (IdDireccion, IdCliente, Telefono, Email) VALUES
+(1, 1, '912345678', 'juan.garcia@email.com'),
+(2, 2, '912345679', 'maria.rodriguez@email.com'),
+(3, 3, '912345680', 'pedro.martinez@email.com'),
+(4, 4, '912345681', 'ana.torres@email.com'),
+(5, 5, '912345682', 'luis.ramirez@email.com'),
+(6, 6, '912345683', 'carolina.flores@email.com'),
+(7, 7, '912345684', 'miguel.herrera@email.com'),
+(8, 8, '912345685', 'sofia.jimenez@email.com'),
+(9, 9, '912345686', 'ricardo.diaz@email.com'),
+(10, 10, '912345687', 'elena.rojas@email.com');
+GO
+
+-- DIRECCION_PROVEEDOR (10 registros)
+INSERT INTO DIRECCION_PROVEEDOR (Jiron, Manzana, Lote, IdUbicacion) VALUES
+('Avenida Industrial', 'M-10', 'L-5', 1),
+('Calle Comercio', 'M-15', 'L-8', 2),
+('Prolongacion San Martin', 'M-20', 'L-12', 3),
+('Jiron Los Girasoles', 'M-25', 'L-15', 4),
+('Avenida La Marina', 'M-30', 'L-20', 5),
+('Calle Los Alamos', 'M-35', 'L-25', 6),
+('Jiron Las Casuarinas', 'M-40', 'L-30', 7),
+('Avenida Universitaria', 'M-45', 'L-35', 8),
+('Calle Los Pinos', 'M-50', 'L-40', 9),
+('Jiron Los Olivos', 'M-55', 'L-45', 10);
+GO
+
+-- CATEGORIA (10 registros)
+INSERT INTO CATEGORIA (NombreCategoria, Descripcion, IdCarta) VALUES
+('Entradas Frias', 'Entradas frías', 1),
+('Entradas Calientes', 'Entradas calientes', 1),
+('Fondos de Carnes', 'Platos principales de carne', 1),
+('Fondos de Mariscos', 'Platos principales de mariscos', 2),
+('Bebidas Gaseosas', 'Gaseosas y refrescos', 4),
+('Bebidas Alcoholicas', 'Cocktails y licores', 4),
+('Postres Tradicionales', 'Postres peruanos', 5),
+('Postres Internacionales', 'Postres del extranjero', 5),
+('Sopas y Cremas', 'Sopas del dia', 1),
+('Menus Infantiles', 'Platos para ninos', 7);
+GO
+
+-- PLATO_DETALLE (10 registros)
+INSERT INTO PLATO_DETALLE (Precio, Disponibilidad) VALUES
+(15.50, 'Disponible'),
+(18.00, 'Disponible'),
+(25.00, 'Disponible'),
+(35.00, 'Disponible'),
+(8.00, 'Disponible'),
+(12.00, 'Disponible'),
+(10.00, 'Disponible'),
+(22.00, 'Disponible'),
+(30.00, 'Disponible'),
+(14.00, 'Disponible');
+GO
+
+-- EMPLEADO (10 registros)
+INSERT INTO EMPLEADO (PrimerNombre, SegundoNombre, ApellidoPaterno, ApellidoMaterno, Estado, DNI, IdDireccion, IdCargo, IdEmpleadoContacto) VALUES
+('Roberto', 'Antonio', 'Gonzalez', 'Perez', 'Activo', '11223344', 1, 1, 1),
+('Elena', 'Maria', 'Castro', 'Ruiz', 'Activo', '22334455', 2, 2, 2),
+('Manuel', 'Jesus', 'Vargas', 'Soto', 'Activo', '33445566', 3, 3, 3),
+('Lucia', 'Fernanda', 'Ramos', 'Ortega', 'Activo', '44556677', 4, 4, 4),
+('Carlos', 'Andres', 'Gutierrez', 'Alvarez', 'Activo', '55667788', 5, 5, 5),
+('Rosa', 'Isabel', 'Mendoza', 'Romero', 'Activo', '66778899', 6, 6, 6),
+('Jorge', 'Luis', 'Aguilar', 'Navarro', 'Activo', '77889900', 7, 7, 7),
+('Patricia', 'Luz', 'Guerrero', 'Molina', 'Activo', '88990011', 8, 8, 8),
+('Alberto', 'Raul', 'Paredes', 'Cardenas', 'Activo', '99001122', 9, 9, 9),
+('Silvia', 'Elena', 'Reyes', 'Diaz', 'Activo', '10111233', 10, 10, 10);
+GO
+
+-- HISTORIAL_EMPLEADO (10 registros)
+INSERT INTO HISTORIAL_EMPLEADO (IdCargo, IdEmpleado, FechaIngreso) VALUES
+(1, 1, '2020-01-15'),
+(2, 2, '2019-03-20'),
+(3, 3, '2021-06-10'),
+(4, 4, '2022-02-28'),
+(5, 5, '2022-09-05'),
+(6, 6, '2023-01-10'),
+(7, 7, '2023-04-15'),
+(8, 8, '2023-07-20'),
+(9, 9, '2024-01-05'),
+(10, 10, '2024-02-10');
+GO
+
+-- PLATO (10 registros)
+INSERT INTO PLATO (NombrePlato, Descripcion, TiempoPreparacion, Precio, Disponibilidad, IdCategoria, IdPlatoDetalle) VALUES
+('Ceviche Clasico', 'Pescado fresco en leche de tigre', 15, 25.00, 'Disponible', 1, 1),
+('Lomo Saltado', 'Lomo fino saltado con verduras', 20, 35.00, 'Disponible', 3, 2),
+('Aji de Gallina', 'Gallina deshilachada en salsa de aji', 25, 28.00, 'Disponible', 3, 3),
+('Parihuela', 'Sopa de mariscos picante', 30, 45.00, 'Disponible', 4, 4),
+('Causa Limeña', 'Pure de papa con pollo y mayonesa', 10, 18.00, 'Disponible', 1, 5),
+('Anticuchos', 'Corazon de res a la parrilla', 15, 22.00, 'Disponible', 2, 6),
+('Papa a la Huancaina', 'Papa con salsa de queso y aji', 10, 15.00, 'Disponible', 1, 7),
+('Sudado de Pescado', 'Pescado cocido con cebolla y tomate', 25, 32.00, 'Disponible', 4, 8),
+('Arroz con Pato', 'Arroz verde con pato confitado', 35, 48.00, 'Disponible', 3, 9),
+('Flan de Leche', 'Postre de huevo y leche', 5, 12.00, 'Disponible', 7, 10);
+GO
+
+-- PROVEEDOR (10 registros)
+INSERT INTO PROVEEDOR (NombreEmpresa, RUC, Estado, IdDireccion, IdTipoSuministro, IdContacto) VALUES
+('Carnes Premium SAC', '20123456789', 'Activo', 1, 1, 1),
+('Mariscos del Peru EIRL', '20234567890', 'Activo', 2, 2, 2),
+('Verduras Frescas SAC', '20345678901', 'Activo', 3, 3, 3),
+('Frutas Tropicales EIRL', '20456789012', 'Activo', 4, 4, 4),
+('Productos Lacteos SAC', '20567890123', 'Activo', 5, 5, 5),
+('Distribuidora de Bebidas SAC', '20678901234', 'Activo', 6, 6, 6),
+('Especias del Mundo EIRL', '20789012345', 'Activo', 7, 8, 7),
+('Panaderia Delicias SAC', '20890123456', 'Activo', 8, 9, 8),
+('Suministros de Limpieza SAC', '20901234567', 'Activo', 9, 10, 9),
+('Organicos Peruanos EIRL', '21012345678', 'Activo', 10, 3, 10);
+GO
+
+-- MESA (10 registros)
+INSERT INTO MESA (Capacidad, NumeroMesa, Estado, IdUbicacion) VALUES
+(4, 1, 'Disponible', 1),
+(6, 2, 'Disponible', 2),
+(2, 3, 'Disponible', 3),
+(8, 4, 'Disponible', 4),
+(4, 5, 'Disponible', 5),
+(10, 6, 'Disponible', 6),
+(2, 7, 'Disponible', 7),
+(6, 8, 'Disponible', 8),
+(4, 9, 'Disponible', 9),
+(8, 10, 'Disponible', 10);
+GO
+
+-- CONTRATO (10 registros - 5 empleados, 5 proveedores)
+INSERT INTO CONTRATO (FechaInicio, FechaFin, TipoContrato, Salario, EstadoContrato, IdEmpleado, IdProveedor) VALUES
+('2020-01-15', NULL, 'Indefinido', 5000.00, 'Vigente', 1, NULL),
+('2019-03-20', NULL, 'Indefinido', 4000.00, 'Vigente', 2, NULL),
+('2021-06-10', NULL, 'Indefinido', 3000.00, 'Vigente', 3, NULL),
+('2022-02-28', NULL, 'Temporal', 1500.00, 'Vigente', 4, NULL),
+('2022-09-05', '2024-09-05', 'Temporal', 1200.00, 'Vigente', 5, NULL),
+('2023-01-10', NULL, 'Indefinido', 1300.00, 'Vigente', 6, NULL),
+('2024-01-15', '2025-01-15', 'Servicios', NULL, 'Vigente', NULL, 1),
+('2024-02-01', '2025-02-01', 'Servicios', NULL, 'Vigente', NULL, 2),
+('2024-03-01', '2025-03-01', 'Servicios', NULL, 'Vigente', NULL, 3),
+('2024-04-01', '2025-04-01', 'Servicios', NULL, 'Vigente', NULL, 4);
+GO
+
+-- ============================================
+-- TABLAS DEPENDIENTES NIVEL 3
+-- ============================================
+
+-- RESERVACION (10 registros)
+INSERT INTO RESERVACION (Fecha, Hora, NumeroPersonas, OcasionEspecial, EstadoReservacion, IdCliente, IdMesa) VALUES
+('2024-11-20', '19:00:00', 4, 'Cumpleaños', 'Pendiente', 1, 1),
+('2024-11-21', '13:00:00', 2, NULL, 'Pendiente', 2, 3),
+('2024-11-22', '20:00:00', 6, 'Aniversario', 'Pendiente', 3, 2),
+('2024-11-23', '12:00:00', 8, 'Casamiento', 'Pendiente', 4, 4),
+('2024-11-24', '19:30:00', 4, NULL, 'Pendiente', 5, 5),
+('2024-11-25', '14:00:00', 10, 'Evento Corporativo', 'Pendiente', 6, 6),
+('2024-11-26', '20:00:00', 2, NULL, 'Pendiente', 7, 7),
+('2024-11-27', '13:00:00', 6, 'Bautizo', 'Pendiente', 8, 8),
+('2024-11-28', '19:00:00', 4, NULL, 'Pendiente', 9, 9),
+('2024-11-29', '20:30:00', 8, 'Despedida', 'Pendiente', 10, 10);
+GO
+
+-- PEDIDO (10 registros)
+INSERT INTO PEDIDO (FechaPedido, HoraPedido, EstadoPedido, IdCliente, IdMesa, IdEmpleado) VALUES
+('2024-11-15', '13:00:00', 'Pendiente', 1, 1, 4),
+('2024-11-15', '13:15:00', 'En Preparacion', 2, 2, 4),
+('2024-11-15', '13:30:00', 'Servido', 3, 3, 5),
+('2024-11-15', '14:00:00', 'Pagado', 4, 4, 5),
+('2024-11-15', '14:30:00', 'Pendiente', 5, 5, 4),
+('2024-11-15', '19:00:00', 'En Preparacion', 6, 6, 4),
+('2024-11-15', '19:15:00', 'Servido', 7, 7, 5),
+('2024-11-15', '19:30:00', 'Pagado', 8, 8, 5),
+('2024-11-15', '20:00:00', 'Pendiente', 9, 9, 4),
+('2024-11-15', '20:30:00', 'En Preparacion', 10, 10, 5);
+GO
+
+-- DETALLE_PEDIDO (10 registros)
+INSERT INTO DETALLE_PEDIDO (Cantidad, PrecioUnitario, Observaciones, IdPedido, IdPlato) VALUES
+(2, 25.00, 'Sin aji', 1, 1),
+(1, 35.00, NULL, 1, 2),
+(3, 18.00, 'Extra mayonesa', 2, 5),
+(2, 45.00, 'Muy picante', 3, 4),
+(1, 28.00, NULL, 4, 3),
+(4, 15.00, 'Para llevar', 5, 7),
+(2, 32.00, 'Sin cebolla', 6, 8),
+(1, 48.00, NULL, 7, 9),
+(3, 12.00, 'Con chocolate', 8, 10),
+(2, 22.00, 'Bien cocido', 9, 6);
+GO
+
+-- COMPROBANTE_PAGO (10 registros)
+INSERT INTO COMPROBANTE_PAGO (IdPedido, TipoComprobante, Serie, SubTotal, IGV, MontoTotal, EstadoComprobante) VALUES
+(1, 'Boleta', 'B001', 50.00, 9.00, 59.00, 'Emitido'),
+(2, 'Factura', 'F001', 54.00, 9.72, 63.72, 'Emitido'),
+(3, 'Boleta', 'B002', 90.00, 16.20, 106.20, 'Emitido'),
+(4, 'Factura', 'F002', 45.00, 8.10, 53.10, 'Emitido'),
+(5, 'Boleta', 'B003', 60.00, 10.80, 70.80, 'Emitido'),
+(6, 'Factura', 'F003', 64.00, 11.52, 75.52, 'Emitido'),
+(7, 'Boleta', 'B004', 48.00, 8.64, 56.64, 'Emitido'),
+(8, 'Factura', 'F004', 36.00, 6.48, 42.48, 'Emitido'),
+(9, 'Boleta', 'B005', 44.00, 7.92, 51.92, 'Emitido'),
+(10, 'Factura', 'F005', 96.00, 17.28, 113.28, 'Emitido');
+GO
+
+-- DETALLE_FACTURACION_CLIENTE (10 registros)
+INSERT INTO DETALLE_FACTURACION_CLIENTE (IdCliente, RazonSocial, RUC, DireccionFiscal) VALUES
+(1, 'Juan Carlos Garcia Lopez', '10123456789', 'Jiron Lima 123'),
+(2, 'Maria Elena Rodriguez Gomez', '10876543210', 'Jiron Arequipa 456'),
+(3, 'Pedro Andres Martinez Silva', '20234567890', 'Jiron Cusco 789'),
+(4, 'Ana Patricia Torres Vargas', '20345678901', 'Jiron Piura 234'),
+(5, 'Luis Alberto Ramirez Castro', '10456789012', 'Jiron Tacna 567'),
+(6, 'Carolina Beatriz Flores Mendoza', '20567890123', 'Jiron Trujillo 890'),
+(7, 'Miguel Angel Herrera Cruz', '20678901234', 'Jiron Chiclayo 345'),
+(8, 'Sofia Isabel Jimenez Reyes', '10789012345', 'Jiron Iquitos 678'),
+(9, 'Ricardo Enrique Diaz Morales', '10890123456', 'Jiron Puno 901'),
+(10, 'Elena Victoria Rojas Fuentes', '20901234567', 'Jiron Huancayo 112');
+GO
+
+-- PAGO (10 registros)
+INSERT INTO PAGO (Monto, MetodoPago, IdPedido) VALUES
+(59.00, 'Tarjeta Credito', 1),
+(63.72, 'Tarjeta Debito', 2),
+(106.20, 'Tarjeta Credito', 3),
+(53.10, 'Tarjeta Debito', 4),
+(70.80, 'Tarjeta Credito', 5),
+(75.52, 'Tarjeta Debito', 6),
+(56.64, 'Tarjeta Credito', 7),
+(42.48, 'Tarjeta Credito', 8),
+(51.92, 'Tarjeta Debito', 9),
+(113.28, 'Tarjeta Credito', 10);
+GO
+
+-- PAGO_TARJETA (10 registros)
+INSERT INTO PAGO_TARJETA (IdPago, TipoTarjeta, NumeroTarjeta) VALUES
+(1, 'Visa', '1234'),
+(2, 'Mastercard', '5678'),
+(3, 'American Express', '9012'),
+(4, 'Visa', '3456'),
+(5, 'Mastercard', '7890'),
+(6, 'American Express', '1111'),
+(7, 'Visa', '2222'),
+(8, 'Mastercard', '3333'),
+(9, 'American Express', '4444'),
+(10, 'Visa', '5555');
+GO
+
+-- INVENTARIO (10 registros)
+INSERT INTO INVENTARIO (CantidadStock, FechaUltimaReposicion, StockMinimo, FechaVencimiento, IdIngrediente) VALUES
+(50, '2024-11-01', 10, NULL, 1),
+(30, '2024-11-05', 5, NULL, 2),
+(20, '2024-11-10', 8, '2024-11-20', 3),
+(100, '2024-11-12', 20, NULL, 4),
+(80, '2024-11-08', 15, NULL, 5),
+(25, '2024-11-15', 5, '2024-12-31', 6),
+(200, '2024-11-14', 30, NULL, 7),
+(150, '2024-11-13', 25, NULL, 8),
+(60, '2024-11-11', 10, '2025-06-30', 9),
+(40, '2024-11-09', 8, '2024-12-15', 10);
+GO
+
+-- CONTRATO_CLAUSULA (10 registros)
+INSERT INTO CONTRATO_CLAUSULA (IdContrato, DescripcionClausula) VALUES
+(1, 'Clausula de confidencialidad: No divulgar información sensible del restaurante'),
+(2, 'Clausula de no competencia: No trabajar en restaurantes competidores por 1 año'),
+(3, 'Clausula de horario: Cumplir estrictamente con los turnos asignados'),
+(4, 'Clausula de capacitación: Asistir a capacitaciones mensuales'),
+(5, 'Clausula de inducción: Periodo de prueba de 3 meses'),
+(6, 'Clausula de puntualidad: Llegar 15 minutos antes del inicio del turno'),
+(7, 'Clausula de calidad: Mantener estándares de calidad ISO 9001'),
+(8, 'Clausula de entrega: Suministrar productos frescos diariamente'),
+(9, 'Clausula de pago: Pago contra entrega con 30 días de crédito'),
+(10, 'Clausula de devolución: Aceptar devolución de productos en mal estado');
+GO
+
+-- EMPLEADO_TURNO (10 registros)
+INSERT INTO EMPLEADO_TURNO (IdEmpleado, IdTurno, FechaAsignacion) VALUES
+(1, 1, '2024-11-01'),
+(2, 3, '2024-11-01'),
+(3, 5, '2024-11-01'),
+(4, 2, '2024-11-01'),
+(5, 4, '2024-11-01'),
+(6, 6, '2024-11-01'),
+(7, 8, '2024-11-01'),
+(8, 10, '2024-11-01'),
+(9, 7, '2024-11-01'),
+(10, 9, '2024-11-01');
+GO
+
+-- PLATO_INGREDIENTE (10 registros)
+INSERT INTO PLATO_INGREDIENTE (IdPlato, IdIngrediente, CantidadNecesaria) VALUES
+(1, 3, 0.300),
+(1, 5, 0.100),
+(1, 6, 0.050),
+(2, 1, 0.200),
+(2, 4, 0.150),
+(2, 5, 0.100),
+(3, 2, 0.300),
+(3, 9, 0.200),
+(3, 10, 0.100),
+(4, 3, 0.500);
+GO
+
+-- PROVEEDOR_INGREDIENTE (10 registros)
+INSERT INTO PROVEEDOR_INGREDIENTE (IdProveedor, IdIngrediente, PrecioCompra, FechaUltimaCompra) VALUES
+(1, 1, 22.50, '2024-11-10'),
+(1, 2, 10.00, '2024-11-10'),
+(2, 3, 32.00, '2024-11-12'),
+(3, 4, 3.00, '2024-11-14'),
+(3, 5, 2.50, '2024-11-14'),
+(6, 9, 2.80, '2024-11-11'),
+(6, 10, 14.00, '2024-11-11'),
+(7, 6, 8.00, '2024-11-13'),
+(4, 7, 4.00, '2024-11-09'),
+(4, 8, 5.50, '2024-11-09');
+GO
+
+
+
+
+
+
+
+
+
+
+
+-- SEGURIDAD POR ROLES 
+
+-- db_owner para Gerente (control total)
+-- db_datareader + GRANT mínimo para otros roles
+
+USE RANCHO_SAGRADO;
+GO
+
+
+-- 1. GERENTE/ADMINISTRADOR 
+
+CREATE LOGIN login_gerente WITH PASSWORD = 'TempPass_Gerente_2025';
+CREATE USER user_gerente FOR LOGIN login_gerente;
+ALTER ROLE db_owner ADD MEMBER user_gerente;
+GO
+
+
+-- 2. CAJERO (Procesamiento de Pagos)
+
+CREATE LOGIN login_cajero WITH PASSWORD = 'TempPass_Cajero_2025';
+CREATE USER user_cajero FOR LOGIN login_cajero;
+
+-- Base: lectura en todo
+ALTER ROLE db_datareader ADD MEMBER user_cajero;
+
+-- Permisos específicos para RF-03 (Facturación) y RF-01 (Pedidos)
+GRANT INSERT, SELECT ON COMPROBANTE_PAGO TO user_cajero;
+GRANT INSERT, SELECT ON PAGO TO user_cajero;
+GRANT UPDATE ON PEDIDO TO user_cajero;  -- Cambiar estado a "Pagado"
+GRANT UPDATE ON MESA TO user_cajero;     -- Cambiar estado a "Disponible"
+GO
+
+
+-- 3. MESERO (Toma de Pedidos y Reservas)
+
+CREATE LOGIN login_mesero WITH PASSWORD = 'TempPass_Mesero_2025';
+CREATE USER user_mesero FOR LOGIN login_mesero;
+
+-- Base: lectura en todo
+ALTER ROLE db_datareader ADD MEMBER user_mesero;
+
+-- Permisos específicos para RF-01, RF-06, RF-07
+GRANT INSERT ON PEDIDO TO user_mesero;
+GRANT INSERT ON RESERVACION TO user_mesero;
+GRANT UPDATE ON MESA TO user_mesero; -- Cambiar estado a "Ocupada" o "Reservada"
+GO
+
+
+-- 4. CHEF/COCINA (Gestión de Cocina e Inventario)
+
+CREATE LOGIN login_chef WITH PASSWORD = 'TempPass_Chef_2025';
+CREATE USER user_chef FOR LOGIN login_chef;
+
+-- Base: lectura en todo
+ALTER ROLE db_datareader ADD MEMBER user_chef;
+
+-- Permisos específicos para RF-04 (Inventario)
+GRANT UPDATE ON INVENTARIO TO user_chef;  -- Descontar stock
+GRANT UPDATE ON INGREDIENTE TO user_chef; -- Registrar entradas
+GO
+
+
+
+--=================================
+-- CONSULTAS DDL 
+--=================================
+
+-- 1. CREATE TABLE
+CREATE TABLE PRODUCTO (
+    IdProducto INT IDENTITY PRIMARY KEY,
+    Nombre VARCHAR(50),
+    Precio DECIMAL(10,2)
+);
+
+-- 2. CREATE TABLE
+CREATE TABLE CATEGORIA_TEMP (
+    IdCategoria INT IDENTITY,
+    Nombre VARCHAR(50)
+);
+
+-- 3. CREATE LOGIN
+CREATE LOGIN login_prueba WITH PASSWORD = 'Pass123';
+
+-- 4. CREATE USER
+CREATE USER user_prueba FOR LOGIN login_prueba;
+
+-- 5. ALTER TABLE (Agregar columna)
+ALTER TABLE PRODUCTO
+ADD Stock INT;
+
+-- 6. ALTER TABLE (Modificar tipo)
+ALTER TABLE PRODUCTO
+ALTER COLUMN Nombre VARCHAR(100);
+
+-- 7. ALTER TABLE (Eliminar columna)
+ALTER TABLE PRODUCTO
+DROP COLUMN Stock;
+
+-- 8. DROP TABLE
+DROP TABLE CATEGORIA_TEMP;
+
+-- 9. DROP USER
+DROP USER user_prueba;
+
+-- 10. DROP LOGIN
+DROP LOGIN login_prueba;
+
+
+SELECT * FROM CATEGORIA_TEMP;
+
+
+
+--=================================
+-- CONSULTAS DML 
+--=================================
+
+-- 1. INSERT
+INSERT INTO PRODUCTO (Nombre, Precio)
+VALUES ('Coca Cola', 5.50);
+
+-- 2. INSERT
+INSERT INTO PRODUCTO (Nombre, Precio)
+VALUES ('Inka Kola', 6.00);
+
+SELECT * FROM PRODUCTO
+
+-- 3. UPDATE
+UPDATE PRODUCTO
+SET Precio = 7.00
+WHERE Nombre = 'Coca Cola';
+
+-- 4. UPDATE
+UPDATE PRODUCTO
+SET Nombre = 'Inka Kola Personal'
+WHERE Nombre = 'Inka Kola';
+
+-- 5. DELETE
+DELETE FROM PRODUCTO
+WHERE IdProducto = 1;
+
+-- 6. DELETE
+DELETE FROM PRODUCTO
+WHERE Precio > 6.00;
+
+-- 7. SELECT con INNER JOIN
+SELECT P.IdPedido, C.PrimerNombre, C.ApellidoPaterno
+FROM PEDIDO P
+INNER JOIN CLIENTE C 
+ON P.IdCliente = C.IdCliente;
+
+-- 8. SELECT con INNER JOIN
+SELECT PL.NombrePlato, CA.NombreCategoria
+FROM PLATO PL
+INNER JOIN CATEGORIA CA 
+ON PL.IdCategoria = CA.IdCategoria;
+
+-- 9. SELECT con CROSS JOIN
+SELECT M.NumeroMesa, T.NombreTurno
+FROM MESA M
+CROSS JOIN TURNO T;
+
+-- 10. SELECT con INNER JOIN
+SELECT I.CantidadStock, ING.NombreIngrediente
+FROM INVENTARIO I
+INNER JOIN INGREDIENTE ING 
+ON I.IdIngrediente = ING.IdIngrediente;
+
+
+
+
+
+--=======================================
+-- PLAN DE BACKUPS (COPIAS DE SEGURIDAD)
+--=======================================
+
+USE [RANCHO_SAGRADO]
+GO
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE PROCEDURE [dbo].[sp_SecuenciaBackups]
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- ========================================
+    -- FASE 1: BACKUP COMPLETO
+    -- Ejecución prioritaria para asegurar la base.
+    -- ========================================
+    PRINT '>> Iniciando Backup Completo...';
+    
+    BACKUP DATABASE [RANCHO_SAGRADO]
+    TO DISK = N'C:\Copias de Seguridad\Rancho_Full.bak'
+    WITH INIT, NAME = 'Backup Completo';
+    
+    IF @@ERROR <> 0 
+        PRINT 'Error crítico al generar Backup Completo';
+    ELSE
+        PRINT 'Backup Completo finalizado correctamente.';
+
+    -- ========================================
+    -- FASE 2: BACKUP DIFERENCIAL
+    -- Respaldo de cambios incrementales.
+    -- ========================================
+    PRINT '>> Iniciando Backup Diferencial...';
+    
+    BACKUP DATABASE [RANCHO_SAGRADO]
+    TO DISK = N'C:\Copias de Seguridad\Rancho_Diff.bak'
+    WITH DIFFERENTIAL, INIT,
+         NAME = 'Backup Diferencial';
+
+    -- ========================================
+    -- FASE 3: BACKUP DEL LOG DE TRANSACCIONES
+    -- Aseguramiento de últimas transacciones.
+    -- ========================================
+    PRINT '>> Iniciando Backup del Log de Transacciones...';
+    
+    BACKUP LOG [RANCHO_SAGRADO]
+    TO DISK = N'C:\Copias de Seguridad\Rancho_Log.trn'
+    WITH INIT, NAME = 'Backup Log';
+    
+    PRINT '>> Secuencia de backups finalizada exitosamente.';
+END;
+GO
